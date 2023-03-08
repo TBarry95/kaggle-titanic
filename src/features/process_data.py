@@ -1,10 +1,22 @@
 import pandas as pd
 import statistics
+pd.set_option('display.max_columns', None)
 
 
 class ProcessData:
 
+    def age_analysis(self, data):
+
+        train_data_a = data[~data["Age"].isna()]
+        age_median = statistics.median(train_data_a["Age"])
+
+        train_data_na = data[data["Age"].isna()]
+
+
     def main(self, data):
+
+        train_data_a = data[~data["Age"].isna()]
+        age_median = statistics.median(train_data_a["Age"])
 
         data["Cabin"] = data["Cabin"].fillna("")
         data["Fare"] = data["Fare"].fillna("")
@@ -16,11 +28,12 @@ class ProcessData:
         cabin_known = []
         sex_male = []
         fare = []
+        age_catgs = []
         for inx, row in data.iterrows():
             if row["Age"] > 0:
-                age_known.append(1)
+                age_known.append(row["Age"])
             else:
-                age_known.append(0)
+                age_known.append(age_median)
 
             if row["Cabin"] == "":
                 cabin_known.append(0)
@@ -48,6 +61,7 @@ class ProcessData:
         data = data.set_index("PassengerId")
 
         return data
+
 
 
 if __name__ == "__main__":

@@ -22,17 +22,24 @@ class DataQuality:
         pass
 
 
+class EDA:
+
+    @staticmethod
+    def correlation_matrix(data):
+        plt.figure()
+        corr = data.corr()
+        sns.heatmap(corr, cmap="Blues", annot=True)
+
+
 if __name__ == "__main__":
-    train_data = pd.read_csv("./data/raw/train.csv")
-    test_data = pd.read_csv("./data/raw/test.csv")
+    train_data = pd.read_csv("./data/processed/train.csv")
+    test_data = pd.read_csv("./data/processed/test.csv")
     print(train_data.dtypes)
+
+    EDA.correlation_matrix(train_data)
 
     DataQuality.identify_missing_values(train_data)
     DataQuality.identify_missing_values(test_data)
-
-
-
-
 
 
 
