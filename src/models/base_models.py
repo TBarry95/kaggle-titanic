@@ -3,9 +3,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from sklearn.model_selection import cross_val_score, cross_validate
+from sklearn.model_selection import cross_val_predict, cross_validate
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import SMOTE
 pd.set_option('display.max_columns', None)
 
 
@@ -50,12 +51,20 @@ class BaseModels:
         f1_list = []
         fit_time_list = []
 
+        preds = []
+
         for model in config["models"]:
             res = cross_validate(model,
                                  train_data_x,
                                  train_data_y,
                                  cv=CV_FOLDS,
                                  scoring=("accuracy", "precision", "recall", "f1"))
+            res_y = cross_val_predict(model,
+                                     train_data_x,
+                                     train_data_y,
+                                     cv=CV_FOLDS)
+            print(set(res_y))
+            preds.append(res_y)
 
             model_name = model.get_params()["steps"]
             model_name_list.append(model_name)
@@ -83,7 +92,7 @@ class BaseModels:
         df_res["cv_folds"] = CV_FOLDS
         df_res["total_time"] = df_res["cv_folds"] * df_res["fit_time"]
         print(df_res)
-        return df_res
+        return df_res, preds
 
 
 if __name__ == "__main__":
@@ -91,8 +100,16 @@ if __name__ == "__main__":
     train_data = pd.read_csv("./data/processed/train.csv")
     test_data = pd.read_csv("./data/processed/test.csv")
     train_data_x = train_data[['Pclass',  'SibSp', 'Parch', 'C', 'Q', 'S',
-                                'Fare', 'AgeKnown', 'CabinKnown', 'SexMale']]
+                                'Fare',  "AgeKnown", 'CabinKnown', 'SexMale',
+                               'Deck', 'MarriedWoman']]
     train_data_y = train_data["Survived"]
-
-    df_res = BaseModels.main(train_data_x, train_data_y)
+    df_res, y = BaseModels.main(train_data_x, train_data_y)
     df_res
+
+    # transform the dataset
+    oversample = SMOTE()
+    train_data_x_sm, train_data_y_sm = oversample.fit_resample(train_data_x, train_data_y)
+
+    df_res, y = BaseModels.main(train_data_x_sm, train_data_y_sm)
+    df_res
+    y
